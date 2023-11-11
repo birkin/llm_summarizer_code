@@ -1,5 +1,5 @@
 ## built-in libs
-import argparse, logging, os
+import argparse, logging, os, time
 
 ## external libs
 from transformers import BartForConditionalGeneration, BartTokenizer
@@ -60,7 +60,8 @@ def load_model( update_allowed=False ) -> tuple:
 
 def load_input_text( input_text_filepath: str ):
     """ Loads the input text.
-        Called by manage_summarization(). """
+        Called by manage_summarization(). 
+        TODO: add url-handling. """
     with open( input_text_filepath, 'r' ) as file:
         input_text = file.read()
     ## word-count
@@ -125,7 +126,8 @@ def generate_summary(model, tokenizer, chunks):
 
 if __name__ == "__main__":
     log.debug( 'starting dundermain' )
-
+    start_time = time.time()
+ 
     ## set up argparser
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--input_path', type=str, help='Path to the input file')
@@ -145,9 +147,8 @@ if __name__ == "__main__":
         log.info( '\n\nObama speech summarization -----------------------' )
         manage_summarization( './test_files/obama_speech.txt' )
 
-    log.debug( 'ending dundermain' )
+    end_time = time.time() 
+    time_elapsed = end_time - start_time  
+    log.debug(f'ending dundermain, time elapsed: {time_elapsed:.2f} seconds')
 
-    # log.info( '\n\nHHoag OCRed summarization ------------------------' )
-    # manage_summarization( './test_files/org_description_ocr.txt' )
-    # log.info( '\n\nObama speech summarization -----------------------' )
-    # manage_summarization( './test_files/obama_speech.txt' )
+    log.debug( 'ending dundermain' )

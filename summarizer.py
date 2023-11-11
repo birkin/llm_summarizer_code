@@ -150,5 +150,3 @@ if __name__ == "__main__":
     end_time = time.time() 
     time_elapsed = end_time - start_time  
     log.debug(f'ending dundermain, time elapsed: {time_elapsed:.2f} seconds')
-
-    log.debug( 'ending dundermain' )

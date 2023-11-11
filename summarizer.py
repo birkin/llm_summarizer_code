@@ -29,12 +29,39 @@ def manage_summarization( input_text_filepath: str ):
     log.info( f'SUMMARIZATION-EXCERPT, ``{summary}``' )
 
 
-def load_model():
+def load_model( update_allowed=False ):
     """ Loads the model and tokenizer. 
+        Note: initially, I only had a tokenizer instantiation line, and a model instantiation line,
+              ...but log output indicated that the model was checking huggingface.co each time for possible updates.
         Called by manage_summarization(). """
-    tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
-    model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
+    model_path = 'facebook/bart-large-cnn'
+    tokenizer_path = 'facebook/bart-large-cnn'
+    
+    # Check if update is allowed
+    if update_allowed:
+        # Download/update model and tokenizer
+        log.debug('Downloading/updating model and tokenizer')
+        tokenizer = BartTokenizer.from_pretrained(tokenizer_path)
+        model = BartForConditionalGeneration.from_pretrained(model_path)
+    else:
+        # Use local model and tokenizer
+        log.debug('Using local model and tokenizer')
+        tokenizer = BartTokenizer.from_pretrained(tokenizer_path, local_files_only=True)
+        model = BartForConditionalGeneration.from_pretrained(model_path, local_files_only=True)
+
+    log.debug('Model and tokenizer loaded')
     return model, tokenizer
+
+
+# def load_model():
+#     """ Loads the model and tokenizer. 
+#         Called by manage_summarization(). """
+#     log.debug( 'instantiating tokenizer' )
+#     tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
+#     log.debug( 'instantiating model' )
+#     model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
+#     log.debug( 'model and tokenizer instantiated' )
+#     return model, tokenizer
 
 
 def load_input_text( input_text_filepath: str ):

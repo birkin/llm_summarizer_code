@@ -29,27 +29,21 @@ def manage_summarization( input_text_filepath: str ):
     log.info( f'SUMMARIZATION-EXCERPT, ``{summary}``' )
 
 
-def load_model( update_allowed=False ):
+def load_model( update_allowed=False ) -> tuple:
     """ Loads the model and tokenizer. 
         Note: initially, I only had a tokenizer instantiation line, and a model instantiation line,
               ...but log output indicated that the model was checking huggingface.co each time for possible updates.
         Called by manage_summarization(). """
     model_path = 'facebook/bart-large-cnn'
     tokenizer_path = 'facebook/bart-large-cnn'
-    
-    # Check if update is allowed
-    if update_allowed:
-        # Download/update model and tokenizer
-        log.debug('Downloading/updating model and tokenizer')
+    if update_allowed:  # checks huggingface.co for model-updates
+        log.debug( 'checking huggingface.co for model and tokenizer updates' )
         tokenizer = BartTokenizer.from_pretrained(tokenizer_path)
         model = BartForConditionalGeneration.from_pretrained(model_path)
-    else:
-        # Use local model and tokenizer
-        log.debug('Using local model and tokenizer')
+    else:               # only uses local files
+        log.debug( 'using local model and tokenizer' )
         tokenizer = BartTokenizer.from_pretrained(tokenizer_path, local_files_only=True)
         model = BartForConditionalGeneration.from_pretrained(model_path, local_files_only=True)
-
-    log.debug('Model and tokenizer loaded')
     return model, tokenizer
 
 
@@ -69,6 +63,9 @@ def load_input_text( input_text_filepath: str ):
         Called by manage_summarization(). """
     with open( input_text_filepath, 'r' ) as file:
         input_text = file.read()
+    ## word-count
+    word_count: int = len( input_text.split() )
+    log.debug( f'word_count, ``{word_count}``' )
     return input_text
 
 

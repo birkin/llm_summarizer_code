@@ -26,7 +26,7 @@ def manage_summarization( input_text_filepath: str ):
     model, tokenizer = load_model()
     input_text: str = load_input_text( input_text_filepath )
     summary: str = summarize_text(model, tokenizer, input_text)
-    log.debug( f'SUMMARIZATION-EXCERPT, ``{summary}``' )
+    log.info( f'SUMMARIZATION-EXCERPT, ``{summary}``' )
 
 
 def load_model():
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     ## if there is an input_path, use it, otherwise run the summarizer on the two test-files
     if input_path:
-        log.info( f'\n\nSummarization for input filepath, ``{{input_path}}``...' )
+        log.info( f'\n\nSummarization for input filepath, ``{input_path}``...' )
         manage_summarization( input_path )
     else:
         log.info( '\n\nHHoag OCRed summarization ------------------------' )

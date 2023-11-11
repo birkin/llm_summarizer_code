@@ -19,21 +19,37 @@ def chunk_text(tokenizer, input_text, max_length):
     return chunks
 
 def summarize_text(model, tokenizer, input_text):
-    # Split text into chunks
     chunks = chunk_text(tokenizer, input_text, 1024)
     summaries = []
 
     for chunk in chunks:
-        # Convert chunk to torch tensor
         inputs = torch.tensor([chunk])
-        # Generate summary for the chunk
-        summary_ids = model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
-        # Decode and add the summary to the list
+        # Estimate appropriate generation lengths
+        estimated_max_length = int(100 * len(chunk) / len(tokenizer.encode(input_text)))
+        estimated_min_length = max(int(estimated_max_length * 0.75), 40)  # Ensure a minimum length
+
+        summary_ids = model.generate(inputs, max_length=estimated_max_length, min_length=estimated_min_length, length_penalty=2.0, num_beams=4, early_stopping=True)
         summaries.append(tokenizer.decode(summary_ids[0], skip_special_tokens=True))
     
-    # Concatenate all chunk summaries
     full_summary = ' '.join(summaries)
     return full_summary
+
+# def summarize_text(model, tokenizer, input_text):
+#     # Split text into chunks
+#     chunks = chunk_text(tokenizer, input_text, 1024)
+#     summaries = []
+
+#     for chunk in chunks:
+#         # Convert chunk to torch tensor
+#         inputs = torch.tensor([chunk])
+#         # Generate summary for the chunk
+#         summary_ids = model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
+#         # Decode and add the summary to the list
+#         summaries.append(tokenizer.decode(summary_ids[0], skip_special_tokens=True))
+    
+#     # Concatenate all chunk summaries
+#     full_summary = ' '.join(summaries)
+#     return full_summary
 
 if __name__ == "__main__":
     model, tokenizer = load_model()

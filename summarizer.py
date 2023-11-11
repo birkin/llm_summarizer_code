@@ -19,6 +19,16 @@ log = logging.getLogger( __name__ )
 log.debug( 'logging working' )
 
 
+## main controller function
+def manage_summarization( input_text_filepath: str ):
+    """ Manages the summarization process.
+        Called by dundermain()."""
+    model, tokenizer = load_model()
+    input_text: str = load_input_text( input_text_filepath )
+    summary: str = summarize_text(model, tokenizer, input_text)
+    log.debug( 'SUMMARY:', summary )
+
+
 def load_model():
     """ Loads the model and tokenizer. 
         Called by manage_summarization(). """
@@ -35,26 +45,43 @@ def load_input_text( input_text_filepath: str ):
     return input_text
 
 
+def summarize_text(model, tokenizer, input_text):
+    """ Summarizes the input text. 
+        Called by manage_summarization(). """
+    pre_chunk_size = 1024  # Adjust chunk size for pre-chunking if necessary
+    all_summaries = []
+
+    if len(input_text) > pre_chunk_size:
+        # Pre-chunk the text into smaller parts if it's too long
+        pre_chunks = [input_text[i:i + pre_chunk_size] for i in range(0, len(input_text), pre_chunk_size)]
+        
+        for pre_chunk in pre_chunks:
+            chunks = chunk_text(tokenizer, pre_chunk, 1024)
+            summaries = generate_summary(model, tokenizer, chunks)
+            all_summaries.extend(summaries)
+    else:
+        chunks = chunk_text(tokenizer, input_text, 1024)
+        all_summaries = generate_summary(model, tokenizer, chunks)
+
+    full_summary = ' '.join(all_summaries)
+    condensed_summary = full_summary.split('.')[0] + '.'
+    return condensed_summary
+
+
 def chunk_text(tokenizer, input_text, max_length):
     """ Tokenizez the input text and splits into chunks. 
         Called by summarize_text(). """
-    tokens = tokenizer.encode(input_text, add_special_tokens=False)
+    tokens = tokenizer.encode(input_text, add_special_tokens=False, truncation=True, max_length=max_length)
     chunk_size = max_length - 2  # Adjust for special tokens
     chunks = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
     return chunks
 
 
-def summarize_text( model, tokenizer, input_text ):
-    """ Summarizes the input text. 
-        Called by manage_summarization(). """
-    chunks = chunk_text(tokenizer, input_text, 1024)  # Adjust chunk size
+def generate_summary(model, tokenizer, chunks):
+    """ Generates summaries for given chunks of text. 
+        Called by summarize_text(). """
     summaries = []
-
     for chunk in chunks:
-        if len(chunk) > 1024:
-            print( f'Chunk too long: ``{len(chunk)}`` tokens. Skipping.' )
-            continue
-
         inputs = torch.tensor([chunk]).to(model.device)
         try:
             summary_ids = model.generate(
@@ -68,28 +95,11 @@ def summarize_text( model, tokenizer, input_text ):
             )
             summaries.append(tokenizer.decode(summary_ids[0], skip_special_tokens=True))
         except RuntimeError as e:
-            print( f'Error during summarization: ``{e}``' )
-
-    full_summary = ' '.join(summaries)
-    condensed_summary = full_summary.split('.')[0] + '.'
-    return condensed_summary
-
-
-def manage_summarization( input_text_filepath: str ):
-    """ Manages the summarization process.
-        Called by dundermain()."""
-    model, tokenizer = load_model()
-    input_text: str = load_input_text( input_text_filepath )
-    summary: str = summarize_text(model, tokenizer, input_text)
-    print( 'Summary:', summary )
+            print(f'Error during summarization: ``{e}``')
+    return summaries
 
 
 if __name__ == "__main__":
-    # model, tokenizer = load_model()
-    # input_text = load_input_text()
-    # summary = summarize_text(model, tokenizer, input_text)
-    # print('Summary:', summary)
-
     log.debug( 'starting __main__' )
     log.info( '\n\nHHoag OCRed summarization ------------------------' )
     manage_summarization( './test_files/org_description_ocr.txt' )

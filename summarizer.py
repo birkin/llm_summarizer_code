@@ -2,7 +2,8 @@ from transformers import BartForConditionalGeneration, BartTokenizer
 import torch
 
 def load_input_text():
-    with open('./test_files/obama.txt', 'r') as file:
+    # with open('./test_files/obama.txt', 'r') as file:
+     with open('./test_files/obama.txt', 'r') as file:
         input_text = file.read()
     return input_text
 

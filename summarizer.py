@@ -1,5 +1,5 @@
 ## built-in libs
-import logging, os
+import argparse, logging, os
 
 ## external libs
 from transformers import BartForConditionalGeneration, BartTokenizer
@@ -26,7 +26,7 @@ def manage_summarization( input_text_filepath: str ):
     model, tokenizer = load_model()
     input_text: str = load_input_text( input_text_filepath )
     summary: str = summarize_text(model, tokenizer, input_text)
-    log.debug( 'SUMMARY:', summary )
+    log.debug( f'SUMMARIZATION-EXCERPT, ``{summary}``' )
 
 
 def load_model():
@@ -100,8 +100,30 @@ def generate_summary(model, tokenizer, chunks):
 
 
 if __name__ == "__main__":
-    log.debug( 'starting __main__' )
-    log.info( '\n\nHHoag OCRed summarization ------------------------' )
-    manage_summarization( './test_files/org_description_ocr.txt' )
-    log.info( '\n\nObama speech summarization -----------------------' )
-    manage_summarization( './test_files/obama_speech.txt' )
+    log.debug( 'starting dundermain' )
+
+    ## set up argparser
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--input_path', type=str, help='Path to the input file')
+    args = parser.parse_args()
+    log.debug( f'args: {args}' )
+    ## get input path
+    input_path = args.input_path if args.input_path else ''
+    log.debug( f'input_path: {input_path}' )
+
+    ## if there is an input_path, use it, otherwise run the summarizer on the two test-files
+    if input_path:
+        log.info( f'\n\nSummarization for input filepath, ``{{input_path}}``...' )
+        manage_summarization( input_path )
+    else:
+        log.info( '\n\nHHoag OCRed summarization ------------------------' )
+        manage_summarization( './test_files/org_description_ocr.txt' )
+        log.info( '\n\nObama speech summarization -----------------------' )
+        manage_summarization( './test_files/obama_speech.txt' )
+
+    log.debug( 'ending dundermain' )
+
+    # log.info( '\n\nHHoag OCRed summarization ------------------------' )
+    # manage_summarization( './test_files/org_description_ocr.txt' )
+    # log.info( '\n\nObama speech summarization -----------------------' )
+    # manage_summarization( './test_files/obama_speech.txt' )

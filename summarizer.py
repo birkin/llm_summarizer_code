@@ -1,38 +1,42 @@
 from transformers import BartForConditionalGeneration, BartTokenizer
 import torch
 
+def load_input_text():
+    with open('./test_files/obama.txt', 'r') as file:
+        input_text = file.read()
+    return input_text
+
 def load_model():
     tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
     model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
     return model, tokenizer
 
+def chunk_text(tokenizer, input_text, max_length):
+    # Tokenize the input text and split into chunks
+    tokens = tokenizer.encode(input_text, add_special_tokens=False)
+    chunk_size = max_length - 2  # for special tokens [CLS] and [SEP]
+    chunks = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
+    return chunks
+
 def summarize_text(model, tokenizer, input_text):
-    inputs = tokenizer.encode("summarize: " + input_text, return_tensors="pt", max_length=1024, truncation=True)
-    summary_ids = model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
-    return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    # Split text into chunks
+    chunks = chunk_text(tokenizer, input_text, 1024)
+    summaries = []
+
+    for chunk in chunks:
+        # Convert chunk to torch tensor
+        inputs = torch.tensor([chunk])
+        # Generate summary for the chunk
+        summary_ids = model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
+        # Decode and add the summary to the list
+        summaries.append(tokenizer.decode(summary_ids[0], skip_special_tokens=True))
+    
+    # Concatenate all chunk summaries
+    full_summary = ' '.join(summaries)
+    return full_summary
 
 if __name__ == "__main__":
     model, tokenizer = load_model()
-    input_text = input('Enter text to summarize: ')
+    input_text = load_input_text()
     summary = summarize_text(model, tokenizer, input_text)
     print('Summary:', summary)
-
-
-# from transformers import AutoModelForCausalLM, AutoTokenizer
-# import torch
-
-# def load_model():
-#     tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neo-2.7B')
-#     model = AutoModelForCausalLM.from_pretrained('EleutherAI/gpt-neo-2.7B')
-#     return model, tokenizer
-
-# def summarize_text(model, tokenizer, input_text):
-#     inputs = tokenizer.encode('Summarize: ' + input_text, return_tensors='pt')
-#     summary = model.generate(inputs, max_length=50, num_return_sequences=1)
-#     return tokenizer.decode(summary[0], skip_special_tokens=True)
-
-# if __name__ == "__main__":
-#     model, tokenizer = load_model()
-#     input_text = input('Enter text to summarize: ')
-#     summary = summarize_text(model, tokenizer, input_text)
-#     print('Summary:', summary)

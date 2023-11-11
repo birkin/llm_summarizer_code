@@ -27,11 +27,10 @@ def load_model():
     return model, tokenizer
 
 
-def load_input_text():
+def load_input_text( input_text_filepath: str ):
     """ Loads the input text.
         Called by manage_summarization(). """
-    with open('./test_files/obama.txt', 'r') as file:
-    # with open('./test_files/org_description.txt', 'r') as file:
+    with open( input_text_filepath, 'r' ) as file:
         input_text = file.read()
     return input_text
 
@@ -80,8 +79,8 @@ def manage_summarization( input_text_filepath: str ):
     """ Manages the summarization process.
         Called by dundermain()."""
     model, tokenizer = load_model()
-    input_text = load_input_text()
-    summary = summarize_text(model, tokenizer, input_text)
+    input_text: str = load_input_text( input_text_filepath )
+    summary: str = summarize_text(model, tokenizer, input_text)
     print( 'Summary:', summary )
 
 
